@@ -1,4 +1,4 @@
--- Template: the installer replaces __VOICE_TOKEN__ with a random token made for you. Never publish your real token.
+-- Template: the installer replaces the token placeholder below with a random token made for you. Never publish your real token.
 -- AIM voice: lets the iPhone shortcut "Claude" send one message WITHOUT opening the app and wait for the reply,
 -- so Siri can read it aloud.  Paste into Supabase -> SQL Editor -> New query, then Run.
 -- The token below only allows these two functions (send a message to your own chat, wait for the next reply).
@@ -44,7 +44,7 @@ begin
     i := i + 1;
   end loop;
   if v_reply is null then
-    return 'לא קיבלתי תשובה בזמן. בדוק שהקו דלוק.';
+    return 'No reply in time. Check that the line is on.';
   end if;
   return left(regexp_replace(v_reply, '[*_`#>]+', '', 'g'), 1500);
 end $$;

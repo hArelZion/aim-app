@@ -72,7 +72,7 @@ def main():
             missing.append(mod)
     report(OK if not missing else BAD, "Python packages", "missing " + ", ".join(missing) if missing else "all installed",
            "python -m pip install Pillow pypdf pywebpush cryptography comtypes")
-    report(OK if shutil.which("claude") or os.path.isdir(CLAUDE) else BAD, "Claude Code", "",
+    report(OK if shutil.which("claude") or os.path.isdir(CLAUDE) or any(os.path.isdir(os.path.join(os.environ.get("LOCALAPPDATA", ""), n)) for n in ("AnthropicClaude", "Claude")) else BAD, "Claude Code", "",
            "install Claude Code: https://claude.com/claude-code")
     codex = shutil.which("codex")
     report(OK if codex else OPT, "Codex CLI (ChatGPT)", "found" if codex else "not installed (ChatGPT mode will not answer)",

@@ -1,11 +1,11 @@
 -- AIM: AI Manager. Database setup for your own Supabase project.
--- The installer fills in __OWNER_EMAIL__ (the email you sign in with on the phone) and runs or shows this file.
--- By hand: replace __OWNER_EMAIL__ below, then paste into Supabase -> SQL Editor -> New query -> Run.
+-- The installer fills in your email (the one you sign in with on the phone) and copies this file to the clipboard.
+-- By hand: replace the email placeholder below with your email, then paste into Supabase -> SQL Editor -> New query -> Run.
 -- Every table is locked by row-level security to that one email; the publishable key in the page grants nothing else.
 
 -- AIM: tables, access rules and photo storage.
 -- Paste all of this into Supabase -> SQL Editor -> New query, then press Run.
--- Only __OWNER_EMAIL__ (after confirming the email) can read or write.
+-- Only that email (after confirming it) can read or write.
 -- The computer uses the secret key, which bypasses these rules, and never leaves the computer.
 
 create table if not exists public.messages (

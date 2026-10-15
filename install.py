@@ -37,10 +37,12 @@ def step(n, s):
     say("\n== %d. %s" % (n, s))
 
 
-def ask(label, current="", secret=False, check=None, optional=False):
+def ask(label, current="", secret=False, check=None, optional=False, fix=None):
     while True:
         hint = " [press Enter to keep the current one]" if current else (" [optional, Enter to skip]" if optional else "")
-        v = (getpass.getpass if secret else input)("%s%s: " % (label, hint)).strip().strip('"')
+        v = (getpass.getpass if secret and sys.stdin.isatty() else input)("%s%s: " % (label, hint)).strip().strip('"')
+        if fix:
+            v = fix(v)
         if not v:
             if current or optional:
                 return current
@@ -49,6 +51,13 @@ def ask(label, current="", secret=False, check=None, optional=False):
             say("   That doesn't look right, please try again.")
             continue
         return v
+
+
+def project_url(v):
+    """Accept the project URL, the dashboard address or the bare project id, and return https://<id>.supabase.co."""
+    import re
+    m = re.search(r"dashboard/project/([a-z0-9]{20})", v) or re.fullmatch(r"([a-z0-9]{20})", v)
+    return "https://%s.supabase.co" % m.group(1) if m else v.rstrip("/")
 
 
 def read_env(path):
@@ -96,7 +105,7 @@ def check_tools():
     bash = next((c for c in (r"C:\Program Files\Git\bin\bash.exe", r"C:\Program Files (x86)\Git\bin\bash.exe") if os.path.exists(c)), shutil.which("bash"))
     say("   Python %s: ok" % sys.version.split()[0])
     say("   Git Bash: " + ("ok" if bash else "MISSING. Install Git for Windows: https://git-scm.com/download/win"))
-    say("   Claude Code: " + ("ok" if shutil.which("claude") or os.path.isdir(CLAUDE) else "MISSING. Install it: https://claude.com/claude-code"))
+    say("   Claude Code: " + ("ok" if shutil.which("claude") or os.path.isdir(CLAUDE) or any(os.path.isdir(os.path.join(os.environ.get("LOCALAPPDATA", ""), n)) for n in ("AnthropicClaude", "Claude")) else "MISSING. Install it: https://claude.com/claude-code"))
     say("   Codex CLI (for ChatGPT, optional): " + ("ok" if shutil.which("codex") else "not installed. Later: npm i -g @openai/codex, then codex login"))
     if not bash:
         sys.exit("\nInstall Git for Windows first, then run this installer again.")
@@ -109,12 +118,13 @@ def check_tools():
 def collect():
     step(2, "Your Supabase project and phone page")
     say("   Create a free project at https://supabase.com (any name, any region).")
-    say("   You'll find the values below in Project Settings -> API Keys, and the URL in Project Settings -> Data API.")
+    say("   The keys are in your project's Project Settings -> API Keys (use the copy buttons).")
+    say("   For the project URL you can paste the dashboard address from your browser's address bar.")
     env_path = os.path.join(HOME, "secrets.env")
     cur = read_env(env_path)
     d = {}
-    d["SUPABASE_URL"] = ask("   Project URL (https://xxxx.supabase.co)", cur.get("SUPABASE_URL", ""),
-                            check=lambda v: v.startswith("https://") and ".supabase." in v).rstrip("/")
+    d["SUPABASE_URL"] = ask("   Project URL (https://xxxx.supabase.co, or the dashboard address)", cur.get("SUPABASE_URL", ""),
+                            check=lambda v: v.startswith("https://") and ".supabase." in v, fix=project_url)
     d["SUPABASE_ANON_KEY"] = ask("   Publishable key (sb_publishable_...)", cur.get("SUPABASE_ANON_KEY", ""),
                                  check=lambda v: v.startswith(("sb_publishable_", "eyJ")))
     d["SUPABASE_SERVICE_KEY"] = ask("   Secret key (sb_secret_..., typing is hidden)", cur.get("SUPABASE_SERVICE_KEY", ""), secret=True,
@@ -140,7 +150,8 @@ def install_files():
         if os.path.isfile(src):
             backup(dst)
             shutil.copy2(src, dst)
-    say("   %d scripts installed (replaced files are in ~/.aim/backup-%s)" % (len(os.listdir(os.path.join(REPO, "pc"))), STAMP))
+    say("   %d scripts installed" % len(os.listdir(os.path.join(REPO, "pc")))
+        + (" (replaced files are in ~/.aim/backup-%s)" % STAMP if os.path.isdir(os.path.join(HOME, "backup-" + STAMP)) else ""))
     for kind, base in (("claude", CLAUDE), ("codex", CODEX)):
         src_root = os.path.join(REPO, "skills", kind)
         if kind == "codex" and not os.path.isdir(CODEX):
@@ -203,7 +214,10 @@ def database(env):
     say("   2) Paste (Ctrl+V) and press Run. It is safe to run more than once.")
     webbrowser.open(url)
     while True:
-        input("   Press Enter here after it says Success... ")
+        try:
+            input("   Press Enter here after it says Success... ")
+        except EOFError:
+            sys.exit("\n   Run the installer again once the script ran in Supabase; it keeps what you entered.")
         try:
             req = urllib.request.Request(env["SUPABASE_URL"] + "/rest/v1/conversations?select=id&limit=1",
                                          headers={"apikey": env["SUPABASE_SERVICE_KEY"], "Authorization": "Bearer " + env["SUPABASE_SERVICE_KEY"]})

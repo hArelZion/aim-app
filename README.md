@@ -29,14 +29,14 @@ Everything is yours: your fork of this repo hosts the page on GitHub Pages, your
 
 ## Setup (about 15 minutes)
 1. **Fork** this repo, then in your fork: Settings -> Pages -> Deploy from a branch -> `main` / root. Your page will be `https://<you>.github.io/<repo>/`.
-2. **Create a Supabase project** (free). Keep its Project Settings -> API Keys page open. Then in Authentication -> URL Configuration, set **Site URL** to your page address from step 1 and Save (otherwise the confirmation email links to `localhost`).
+2. **Create a Supabase project** (free; the free plan allows 2 active projects per account, so if it asks you to pay, pause an old project or sign up with another email). Keep its Project Settings -> API Keys page open. Then in Authentication -> URL Configuration, set **Site URL** to your page address from step 1 and Save (otherwise the confirmation email links to `localhost`).
 3. **Clone your fork** and run the installer:
    ```
    git clone https://github.com/<you>/<repo>.git
    cd <repo>
    python install.py
    ```
-   It checks your computer, asks for the Supabase details (the secret key is typed hidden), copies the database script to your clipboard and opens the Supabase SQL editor (paste, Run), installs everything, and shows a **QR code**.
+   It checks your computer, asks for the Supabase details (for the project URL you can paste the dashboard address from your browser; copy the keys with their copy buttons; the secret key is typed hidden), copies the database script to your clipboard and opens the Supabase SQL editor (paste, Run), installs everything, and shows a **QR code**.
 4. **On the phone:** scan the QR code, tap *First time here*, create your account with the same email, confirm it, sign in, and *Add to Home Screen*.
 5. **Lock it down:** Supabase -> Authentication -> Sign In / Providers -> turn off *Allow new users to sign up*.
 6. In Claude Code, type **`/phone`**. The line is on.
