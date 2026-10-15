@@ -610,7 +610,7 @@ footer:has(#composer:not(:placeholder-shown)) .quick { display: none; }
   </form>
 </section>
 <section class="login" id="login" hidden>
-  <form class="login-card" id="loginForm">
+  <form class="login-card" id="loginForm" novalidate>
     <span class="logo" data-logo></span>
     <h1>AIM</h1>
     <p data-t="loginLead"></p>
@@ -879,7 +879,7 @@ const I18N = {
     sendErr: "ההודעה לא נשלחה. בדוק חיבור ונסה שוב.", picErr: "התמונה לא נשלחה. נסה תמונה אחרת או קטנה יותר.",
     loginLead: "כניסה לצ'אט הפרטי שלך עם Claude.", signIn: "כניסה", firstTime: "פעם ראשונה? יצירת סיסמה",
     signUpDone: "📧 שלחנו מייל אישור ל-{0}. פתח אותו ולחץ על הקישור (בדוק גם בספאם), ואז חזור לכאן והתחבר עם הסיסמה.",
-    signUpSending: "שולח מייל אישור...", signUpWait: "כבר שלחנו מייל אישור ל-{0}. בדוק את תיבת הדואר (וגם את הספאם). אפשר לבקש שוב בעוד דקה.",
+    signUpFill: "כדי ליצור חשבון, כתוב למעלה אימייל וסיסמה חדשה (8 תווים לפחות), ואז לחץ שוב.", signUpSending: "שולח מייל אישור...", signUpWait: "כבר שלחנו מייל אישור ל-{0}. בדוק את תיבת הדואר (וגם את הספאם). אפשר לבקש שוב בעוד דקה.",
     signUpExists: "החשבון הזה כבר קיים. התחבר עם הסיסמה, או אשר קודם את המייל שקיבלת.",
     emailConfirmed: "✅ המייל אושר. התחבר עם הסיסמה. אם נפתח כאן מתוך אפליקציית המייל, עדיף לחזור לאפליקציית AIM ולהתחבר שם.",
     loginErr: "הכניסה נכשלה. בדוק אימייל וסיסמה, ואם זו פעם ראשונה, אשר קודם את המייל.",
@@ -930,7 +930,7 @@ const I18N = {
     sendErr: "The message wasn't sent. Check your connection and try again.", picErr: "The photo wasn't sent. Try another or a smaller one.",
     loginLead: "Sign in to your private chat with Claude.", signIn: "Sign in", firstTime: "First time? Create a password",
     signUpDone: "📧 We sent a confirmation email to {0}. Open it and tap the link (check spam too), then come back here and sign in with the password.",
-    signUpSending: "Sending the confirmation email...", signUpWait: "We already sent a confirmation email to {0}. Check your inbox (and spam). You can ask again in a minute.",
+    signUpFill: "To create an account, type your email and a new password (at least 8 characters) above, then tap again.", signUpSending: "Sending the confirmation email...", signUpWait: "We already sent a confirmation email to {0}. Check your inbox (and spam). You can ask again in a minute.",
     signUpExists: "This account already exists. Sign in with the password, or first confirm the email you got.",
     emailConfirmed: "✅ Email confirmed. Sign in with your password. If this opened inside your mail app, better go back to the AIM app and sign in there.",
     loginErr: "Sign-in failed. Check the email and password; if this is your first time, confirm the email first.",
@@ -2666,13 +2666,14 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pai
 function loginMsg(s, isErr) { const m = $("loginMsg"); m.textContent = s; m.className = "login-msg" + (isErr ? " err" : ""); m.hidden = !s; }
 $("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault(); loginMsg("");
+  if (!$("email").value.trim() || !$("password").value) { loginMsg(t("loginErr"), true); return; }
   const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
   if (error) loginMsg(t("loginErr"), true);
 });
 $("signUpBtn").onclick = async () => {
-  loginMsg("");
-  if (!$("loginForm").reportValidity()) return;
   const btn = $("signUpBtn"), email = $("email").value.trim();
+  /* iPhone Safari doesn't show the browser's own "fill this in" bubbles, so say it here */
+  if (!/^\S+@\S+\.\S+$/.test(email) || $("password").value.length < 8) { loginMsg(t("signUpFill"), true); return; }
   btn.disabled = true; loginMsg(t("signUpSending"));
   /* the email link carries this page's setup, so it works even when it opens in another browser (Gmail's, say) */
   const setup = btoa(unescape(encodeURIComponent(JSON.stringify({ url: SUPABASE_URL, key: SUPABASE_KEY })))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
