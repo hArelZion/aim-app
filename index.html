@@ -751,11 +751,12 @@ footer:has(#composer:not(:placeholder-shown)) .quick { display: none; }
 const AIM_CFG = (() => {
   let c = Object.assign({}, window.AIM_CONFIG || {});
   try {
-    const q = new URLSearchParams(location.search).get("setup");
+    const qs = new URLSearchParams(location.search), q = qs.get("setup");
+    window.AIM_CONFIRMED = qs.has("confirmed");   // came back from the confirmation email
     if (q) {
       const d = JSON.parse(decodeURIComponent(escape(atob(q.replace(/-/g, "+").replace(/_/g, "/")))));
       if (d && /^https:\/\/[\w.-]+$/.test(d.url || "") && d.key) localStorage.setItem("aim-config", JSON.stringify({ supabaseUrl: d.url, supabaseKey: d.key }));
-      history.replaceState(null, "", location.pathname);
+      history.replaceState(null, "", location.pathname + location.hash);   // keep #access_token for the sign-in
     }
     const saved = JSON.parse(localStorage.getItem("aim-config") || "null");
     if (saved && saved.supabaseUrl) c = Object.assign(c, saved);
@@ -768,7 +769,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {   // first run: ask where the data lives, 
   const he = (navigator.language || "").startsWith("he");
   const box = document.getElementById("setup"); box.hidden = false; box.dir = he ? "rtl" : "ltr";
   box.querySelector("h2").textContent = he ? "חיבור AIM" : "Connect AIM";
-  box.querySelector("p").textContent = he ? "סרוק את קוד ה-QR שהמתקין הציג במחשב, או הדבק את כתובת Supabase ואת המפתח הציבורי (publishable)." : "Scan the QR code the installer showed on your computer, or paste your Supabase URL and publishable key.";
+  box.querySelector("p").textContent = he ? "הדף עוד לא מחובר בדפדפן הזה. פתח את קישור ההתקנה שהמתקין הציג במחשב (או סרוק את קוד ה-QR שלו במצלמה), או הדבק כאן את כתובת Supabase ואת המפתח הציבורי (publishable). הגעת לכאן מקישור האישור במייל? המייל כבר אושר: חזור לאפליקציית AIM והתחבר." : "This page isn't connected in this browser yet. Open the setup link the installer showed on your computer (or scan its QR code with the camera), or paste your Supabase URL and publishable key here. Got here from the confirmation email? Your email is already confirmed: go back to the AIM app and sign in.";
   box.querySelector("button").textContent = he ? "שמור" : "Save";
   box.querySelector("form").onsubmit = (e) => {
     e.preventDefault();
@@ -877,7 +878,10 @@ const I18N = {
     notifOffBtn: "הפעל התראות ורטט", notifOnBtn: "התראות פעילות · לחץ לכיבוי", notifDenied: "התראות חסומות בהגדרות הדפדפן", notifTest: "התראות פעילות. כך תקבל הודעה כשמשהו מסתיים.", notifTestPush: "התראות פעילות, גם כשהמסך נעול והאפליקציה סגורה.",
     sendErr: "ההודעה לא נשלחה. בדוק חיבור ונסה שוב.", picErr: "התמונה לא נשלחה. נסה תמונה אחרת או קטנה יותר.",
     loginLead: "כניסה לצ'אט הפרטי שלך עם Claude.", signIn: "כניסה", firstTime: "פעם ראשונה? יצירת סיסמה",
-    signUpDone: "שלחנו מייל אישור. לחץ על הקישור שבו, וחזור לכאן להתחבר עם הסיסמה.",
+    signUpDone: "📧 שלחנו מייל אישור ל-{0}. פתח אותו ולחץ על הקישור (בדוק גם בספאם), ואז חזור לכאן והתחבר עם הסיסמה.",
+    signUpSending: "שולח מייל אישור...", signUpWait: "כבר שלחנו מייל אישור ל-{0}. בדוק את תיבת הדואר (וגם את הספאם). אפשר לבקש שוב בעוד דקה.",
+    signUpExists: "החשבון הזה כבר קיים. התחבר עם הסיסמה, או אשר קודם את המייל שקיבלת.",
+    emailConfirmed: "✅ המייל אושר. התחבר עם הסיסמה. אם נפתח כאן מתוך אפליקציית המייל, עדיף לחזור לאפליקציית AIM ולהתחבר שם.",
     loginErr: "הכניסה נכשלה. בדוק אימייל וסיסמה, ואם זו פעם ראשונה, אשר קודם את המייל.",
     password: "סיסמה (8 תווים לפחות)",
     convsTitle: "השיחות שלך", conversations: "שיחות", currentTag: "נוכחית",
@@ -925,7 +929,10 @@ const I18N = {
     notifOffBtn: "Turn on notifications and vibration", notifOnBtn: "Notifications on · tap to turn off", notifDenied: "Notifications are blocked in the browser settings", notifTest: "Notifications are on. This is how you will be told when something finishes.", notifTestPush: "Notifications are on, even when the screen is locked and the app is closed.",
     sendErr: "The message wasn't sent. Check your connection and try again.", picErr: "The photo wasn't sent. Try another or a smaller one.",
     loginLead: "Sign in to your private chat with Claude.", signIn: "Sign in", firstTime: "First time? Create a password",
-    signUpDone: "We sent a confirmation email. Tap the link in it, then come back here and sign in with the password.",
+    signUpDone: "📧 We sent a confirmation email to {0}. Open it and tap the link (check spam too), then come back here and sign in with the password.",
+    signUpSending: "Sending the confirmation email...", signUpWait: "We already sent a confirmation email to {0}. Check your inbox (and spam). You can ask again in a minute.",
+    signUpExists: "This account already exists. Sign in with the password, or first confirm the email you got.",
+    emailConfirmed: "✅ Email confirmed. Sign in with your password. If this opened inside your mail app, better go back to the AIM app and sign in there.",
     loginErr: "Sign-in failed. Check the email and password; if this is your first time, confirm the email first.",
     password: "Password (8+ characters)",
     convsTitle: "Your conversations", conversations: "Conversations", currentTag: "current",
@@ -2665,9 +2672,18 @@ $("loginForm").addEventListener("submit", async (e) => {
 $("signUpBtn").onclick = async () => {
   loginMsg("");
   if (!$("loginForm").reportValidity()) return;
-  const { error } = await sb.auth.signUp({ email: $("email").value.trim(), password: $("password").value, options: { emailRedirectTo: location.origin + location.pathname } });
-  loginMsg(error ? error.message : t("signUpDone"), !!error);
+  const btn = $("signUpBtn"), email = $("email").value.trim();
+  btn.disabled = true; loginMsg(t("signUpSending"));
+  /* the email link carries this page's setup, so it works even when it opens in another browser (Gmail's, say) */
+  const setup = btoa(unescape(encodeURIComponent(JSON.stringify({ url: SUPABASE_URL, key: SUPABASE_KEY })))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const { data, error } = await sb.auth.signUp({ email, password: $("password").value,
+    options: { emailRedirectTo: location.origin + location.pathname + "?setup=" + setup + "&confirmed=1" } });
+  btn.disabled = false;
+  if (error) loginMsg(/security purposes|rate limit/i.test(error.message) ? t("signUpWait", email) : error.message, true);
+  else if (data && data.user && !(data.user.identities || []).length) loginMsg(t("signUpExists"), true);
+  else loginMsg(t("signUpDone", email));
 };
+if (window.AIM_CONFIRMED) loginMsg(t("emailConfirmed"));
 
 /* ---------- voice shortcut: ?say=text sends a message on its own (for "Hey Siri, Claude") ---------- */
 const DEEP = (() => {
