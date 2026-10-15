@@ -1,0 +1,2 @@
+# keep Unix line endings so bash scripts run after a clone on Windows
+*.sh text eol=lf

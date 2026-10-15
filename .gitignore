@@ -1,0 +1,22 @@
+# secrets: never commit
+secrets.env
+*.pem
+*.token
+voice.sql
+.env
+# runtime state, logs and work folders
+*.log
+*.pid
+*.seen
+*-state.json
+last_conv
+phone_session*
+phone_mirror.json
+model_req_at
+photos/
+gpt-work/
+gemini-work/
+__pycache__/
+*.bak*
+# local notes
+CLAUDE.md
